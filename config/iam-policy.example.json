@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListInfraGuardBucket",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket", "s3:GetBucketLocation"],
+      "Resource": "arn:aws:s3:::REPLACE_WITH_UNIQUE_BUCKET_NAME"
+    },
+    {
+      "Sid": "ReadWriteInfraGuardObjects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::REPLACE_WITH_UNIQUE_BUCKET_NAME/*"
+    },
+    {
+      "Sid": "AthenaQueries",
+      "Effect": "Allow",
+      "Action": [
+        "athena:StartQueryExecution", "athena:GetQueryExecution", "athena:GetQueryResults",
+        "athena:StopQueryExecution", "athena:GetWorkGroup"
+      ],
+      "Resource": "arn:aws:athena:REPLACE_WITH_AWS_REGION:REPLACE_WITH_ACCOUNT_ID:workgroup/primary"
+    },
+    {
+      "Sid": "GlueCatalogMetadata",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetDatabase", "glue:GetDatabases", "glue:CreateDatabase",
+        "glue:GetTable", "glue:GetTables", "glue:CreateTable",
+        "glue:UpdateTable", "glue:GetPartitions", "glue:BatchCreatePartition",
+        "glue:BatchDeletePartition", "glue:DeleteTable"
+      ],
+      "Resource": [
+        "arn:aws:glue:REPLACE_WITH_AWS_REGION:REPLACE_WITH_ACCOUNT_ID:catalog",
+        "arn:aws:glue:REPLACE_WITH_AWS_REGION:REPLACE_WITH_ACCOUNT_ID:database/infraguard",
+        "arn:aws:glue:REPLACE_WITH_AWS_REGION:REPLACE_WITH_ACCOUNT_ID:table/infraguard/*"
+      ]
+    }
+  ]
+}
