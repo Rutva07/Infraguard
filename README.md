@@ -28,7 +28,7 @@ InfraGuard/
 └── .env.example                     # AWS configuration placeholders
 ```
 
-The pipeline processes time-ordered device measurements, derives historical rolling statistics and changes, and trains an XGBoost classifier to estimate failure risk. The AWS module contains code for storing data in S3, publishing Glue tables, and querying data with Athena. The included SQL and feature modules describe the codebase structure; a Backblaze-specific ingestion implementation and live AWS execution are not established by the supplied files.
+The pipeline processes time-ordered device measurements, derives historical rolling statistics and changes, and trains an XGBoost classifier to estimate failure risk. The AWS module contains code for storing data in S3, publishing Glue tables, and querying data with Athena. The included SQL and feature modules describe the codebase structure.
 
 ## Dataset — Backblaze Drive Stats
 
