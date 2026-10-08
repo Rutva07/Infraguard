@@ -188,18 +188,6 @@ python -m infraguard aws query \
 
 The Athena query includes the same labels if those labels were published from the synthetic generator. A live production table might omit labels and therefore cannot support supervised model training until future failure logs are joined. The SQL examples use the default `infraguard.telemetry` name; update them if changing database/table settings. Athena scans and its result-output bucket can cost money; avoid publishing personal/secret telemetry without proper governance.
 
-### Placeholders left for you
-
-| Placeholder | Where | What to replace with |
-| --- | --- | --- |
-| `AWS_PROFILE` | `.env` | Existing AWS SSO/CLI profile name |
-| `AWS_REGION` | `.env` | AWS region containing resources |
-| `INFRAGUARD_S3_BUCKET` | `.env` | Your own unique S3 bucket |
-| `INFRAGUARD_ATHENA_RESULTS_S3` | `.env` | Writable `s3://.../athena-results/` prefix |
-| `INFRAGUARD_ATHENA_DATABASE/TABLE` | `.env` / SQL | Glue/Athena names |
-| IAM resource ARNs | `config/iam-policy.example.json` | Bucket name, region and account ID |
-
-No passwords, access keys, tokens, accounts, cloud resources, or AWS query results are included.
 
 ## 7. Project layout
 
@@ -249,17 +237,6 @@ python -m pytest -q
 
 Tests cover deterministic data generation, ground-truth future labels, causal/no-leak features, invalid data inputs, chronological boundary gaps, training/test metrics, and trained-model prediction/evaluation roundtrips. CI tests run via GitHub Actions with no Docker or AWS credentials.
 
-## 9. Real-data integration checklist
-
-To move beyond a synthetic demonstration, obtain timestamped equipment telemetry and verified outage logs, normalize units/time zones, create per-device future labels, keep identity/label columns out of features, measure event-level lead time and false alarm rates, handle telemetry gaps/device resets, evaluate multiple seeds and future data windows, and review precision–recall tradeoffs under the actual failure base rate. Re-evaluate against an unmodified held-out test set before publishing results or resume metrics.
-
-## 10. Resume reporting
-
-A defensible description after personally executing and documenting the experiments might be:
-
-> Implemented an infrastructure failure-prediction pipeline using Python, XGBoost, S3 and Athena integration; engineered causal temporal CPU, memory, power and temperature features, with performance assessed using chronological holdouts and AUROC/average precision.
-
-Replace this with **your actual test metrics** and clearly state if evaluation used synthetic data. Do not claim AWS or 1M+ records were executed until you have run the relevant commands and confirmed output.
 
 ## License
 
