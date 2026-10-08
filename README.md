@@ -4,9 +4,51 @@
 
 A complete, runnable reference implementation of an infrastructure telemetry pipeline that generates or ingests CPU/memory/power/temperature measurements, computes **causal time-series features**, identifies anomalous behavior, predicts future equipment failures, and evaluates a classifier on a **chronologically held-out test period**. Optional AWS commands store data in S3 as Parquet, register a Glue table, and query it with Athena.
 
-> **Data integrity:** Synthetic telemetry is *simulated*, not recorded from real data centers. No 0.91 AUROC (or any other metric) is claimed before running the benchmark. Realistic production effectiveness requires evaluation on genuine labeled failure logs. AWS usage has not been verified without real credentials.
+> **Data integrity:** Synthetic telemetry is *simulated*, not recorded from real data centers. The synthetic benchmark and the separately reported Backblaze metrics must not be conflated. Realistic production effectiveness requires evaluation on genuine labeled failure logs. AWS usage has not been verified without real credentials.
 
 No Docker. No AWS credentials needed for the local pipeline.
+
+## Real-world benchmark: Backblaze Drive Stats (reported results)
+
+**Dataset:** [Backblaze Drive Stats](https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data), a subset of real hard-drive SMART telemetry with drive failure indicators. This is a **disk-health prediction task**, not CPU/memory/power server failure prediction; the synthetic server dataset described below is a separate demonstration.
+
+### Reported Backblaze evaluation
+
+| Metric | Reported value |
+| --- | ---: |
+| AUROC | **0.91** |
+| Recall (true-positive rate) | **75%** |
+| False-positive rate | **2.5%** |
+| F1 score | **approximately 0.55** |
+
+**Evidence status:** These values were supplied by the project owner. The source dataset slice, prediction file, confusion matrix, model checkpoint, split manifest, and Athena query execution IDs were not provided for independent verification. Do not interpret this table as a benchmark reproduced by the included scripts. The existing bundled trained artifacts and `reports/full_synthetic_experiment.md` concern **synthetic data**, not Backblaze.
+
+**Experimental details still to document:** Backblaze quarter/year and drive models, selected SMART columns, number of drive-days and unique drives, failed-drive count, failure prediction horizon, class prevalence, chronological/device split boundaries, classification threshold, and confusion matrix. The stated metrics alone do not establish those details.
+
+### AWS S3 + Athena workflow for Backblaze
+
+The existing AWS integration supports S3 upload, Glue table publishing, and Athena queries **for the repository's synthetic telemetry schema**. Backblaze SMART columns have a different schema. To reproduce the real-data workflow, adapt the ingestion/table schema and SQL to Backblaze, then:
+
+1. Download a specified Backblaze quarterly CSV subset and retain provenance (source URLs, dates, file hashes).
+2. Load SMART attributes and drive identifiers, sort by date, and create prospective failure labels without using future measurements as model features.
+3. Store the prepared data in S3 as partitioned Parquet; register an appropriate Backblaze Glue table.
+4. Execute Athena SQL over that table to extract feature rows and record Athena query execution IDs, row counts, and S3 result paths.
+5. Train and evaluate XGBoost on a leakage-controlled holdout; save predictions, thresholds, metrics, and split manifests.
+
+**AWS verification:** No successful live AWS S3/Glue/Athena execution is evidenced by the supplied README or artifacts. AWS account/profile, bucket, region, IAM permissions, and query output location must be configured before running against real AWS. Never commit AWS secrets. Example configuration:
+
+```dotenv
+AWS_PROFILE=YOUR_AWS_PROFILE
+AWS_REGION=us-east-1
+S3_BUCKET=YOUR_S3_BUCKET
+ATHENA_DATABASE=infraguard_backblaze
+ATHENA_WORKGROUP=primary
+ATHENA_OUTPUT=s3://YOUR_S3_BUCKET/athena-results/
+```
+
+This section documents the intended AWS-backed Backblaze workflow; it does **not** claim that the existing synthetic-schema CLI can train on Backblaze CSVs unchanged.
+
+---
 
 ## 1. Quick start (local, no AWS)
 
@@ -188,6 +230,18 @@ python -m infraguard aws query \
 
 The Athena query includes the same labels if those labels were published from the synthetic generator. A live production table might omit labels and therefore cannot support supervised model training until future failure logs are joined. The SQL examples use the default `infraguard.telemetry` name; update them if changing database/table settings. Athena scans and its result-output bucket can cost money; avoid publishing personal/secret telemetry without proper governance.
 
+### Placeholders left for you
+
+| Placeholder | Where | What to replace with |
+| --- | --- | --- |
+| `AWS_PROFILE` | `.env` | Existing AWS SSO/CLI profile name |
+| `AWS_REGION` | `.env` | AWS region containing resources |
+| `INFRAGUARD_S3_BUCKET` | `.env` | Your own unique S3 bucket |
+| `INFRAGUARD_ATHENA_RESULTS_S3` | `.env` | Writable `s3://.../athena-results/` prefix |
+| `INFRAGUARD_ATHENA_DATABASE/TABLE` | `.env` / SQL | Glue/Athena names |
+| IAM resource ARNs | `config/iam-policy.example.json` | Bucket name, region and account ID |
+
+No passwords, access keys, tokens, accounts, cloud resources, or AWS query results are included.
 
 ## 7. Project layout
 
@@ -237,6 +291,17 @@ python -m pytest -q
 
 Tests cover deterministic data generation, ground-truth future labels, causal/no-leak features, invalid data inputs, chronological boundary gaps, training/test metrics, and trained-model prediction/evaluation roundtrips. CI tests run via GitHub Actions with no Docker or AWS credentials.
 
+## 9. Real-data integration checklist
+
+To move beyond a synthetic demonstration, obtain timestamped equipment telemetry and verified outage logs, normalize units/time zones, create per-device future labels, keep identity/label columns out of features, measure event-level lead time and false alarm rates, handle telemetry gaps/device resets, evaluate multiple seeds and future data windows, and review precision–recall tradeoffs under the actual failure base rate. Re-evaluate against an unmodified held-out test set before publishing results or resume metrics.
+
+## 10. Resume reporting
+
+A defensible description after personally executing and documenting the experiments might be:
+
+> Implemented an infrastructure failure-prediction pipeline using Python, XGBoost, S3 and Athena integration; engineered causal temporal CPU, memory, power and temperature features, with performance assessed using chronological holdouts and AUROC/average precision.
+
+Replace this with **your actual test metrics** and clearly state if evaluation used synthetic data. Do not claim AWS or 1M+ records were executed until you have run the relevant commands and confirmed output.
 
 ## License
 
