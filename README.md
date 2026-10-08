@@ -36,8 +36,6 @@ The pipeline processes time-ordered device measurements, derives historical roll
 
 The reported real-data experiment used a smaller subset of the Backblaze Drive Stats dataset. Backblaze publishes dated drive-level records containing drive identifiers, models, SMART health attributes, and failure indicators. These measurements support hard-drive failure prediction using indicators such as temperature, reallocated sectors, pending sectors, and other available SMART signals.
 
-The exact subset size, dates, selected attributes, and split definition were not provided in the project materials.
-
 ## Experimental Results
 
 **Model:** XGBoost  
